@@ -48,7 +48,7 @@ struct ContentView: View {
                 HStack {
                     Spacer()
                     VStack {
-                        Text("This Round")
+                        Text("Win or Lose")
                             .font(.subheadline)
                             .foregroundStyle(.blue)
                         
