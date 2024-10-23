@@ -21,12 +21,17 @@ struct ChoiceButton: View {
 }
 
 struct ContentView: View {
-    @State private var appChoices = ["🪨", "📄", "✂️"].shuffled()
-    @State var winOrLose = Bool.random()
+    enum Choice: String, CaseIterable {
+        case rock = "🪨"
+        case paper = "📄"
+        case scissors = "✂️"
+    }
     
+    @State private var appChoices = Choice.allCases
+    @State private var appCurrentChoiceIndex = Int.random(in: 0..<Choice.allCases.count)
+    
+    @State var isWinCondition = Bool.random()
     @State private var userScore = 0
-    @State private var appCurrentChoice = Int.random(in: 0...2)
-    
     @State private var gameIsComplete = false
     @State private var round = 0
 
@@ -52,7 +57,7 @@ struct ContentView: View {
                             .font(.subheadline)
                             .foregroundStyle(.blue)
                         
-                        Text("\(shouldWin())")
+                        Text("\(shouldWin)")
                             .font(.system(size: 48, weight: .semibold))
                             .foregroundStyle(.primary)
                     }
@@ -63,7 +68,7 @@ struct ContentView: View {
                             .font(.subheadline)
                             .foregroundStyle(.blue)
                         
-                        Text(appChoices[appCurrentChoice])
+                        Text(appChoices[appCurrentChoiceIndex].rawValue)
                             .font(.system(size: 48))
                             .foregroundStyle(.primary)
                     }
@@ -113,61 +118,45 @@ struct ContentView: View {
     }
     
     func correctAnswer(_ userAnswer: String) -> Bool {
-        if shouldWin() == "Win" {
-            if userAnswer == "🪨" && appChoices[appCurrentChoice] == "✂️"{
-                return true
-            } else if userAnswer == "📄" && appChoices[appCurrentChoice] == "🪨"{
-                return true
-            } else if userAnswer == "✂️" && appChoices[appCurrentChoice] == "📄"{
-                return true
-            } else {
-                return false
-            }
-        } else {
-            if userAnswer == "✂️" && appChoices[appCurrentChoice] == "🪨"{
-                return true
-            } else if userAnswer == "🪨" && appChoices[appCurrentChoice] == "📄"{
-                return true
-            } else if userAnswer == "📄" && appChoices[appCurrentChoice] == "✂️"{
-                return true
-            } else {
-                return false
-            }
+        
+        guard let userChoice = Choice(rawValue: userAnswer) else {
+            return false
         }
         
+        if shouldWin == "Win" {
+            return userChoice == Choice.allCases[(appCurrentChoiceIndex + 1) % 3]
+        } else {
+            return userChoice == Choice.allCases[(appCurrentChoiceIndex + 2) % 3]
+        }
+    }
+    
+    func updateScore(isCorrect: Bool) {
+        userScore += isCorrect ? 1 : -1
     }
     
     func attemptAnswer(_ answer: String) {
-        if correctAnswer(answer) {
-            userScore += 1
-            
-        } else {
-            userScore -= 1
-        }
+        let isCorrect = correctAnswer(answer)
+        updateScore(isCorrect: isCorrect)
         
         if round == 10 {
             gameIsComplete = true
             
         } else {
             round += 1
-            winOrLose.toggle()
-            appCurrentChoice = Int.random(in: 0...2)
+            isWinCondition.toggle()
+            appCurrentChoiceIndex = Int.random(in: 0...2)
         }
     }
     
-    func shouldWin() -> String {
-        if winOrLose {
-            return "Win"
-        } else {
-            return "Lose"
-        }
+    var shouldWin: String {
+        isWinCondition ? "Win" : "Lose"
     }
 
     func restartGame() {
         gameIsComplete = false
         userScore = 0
-        winOrLose = Bool.random()
-        appCurrentChoice = Int.random(in: 0...2)
+        isWinCondition = Bool.random()
+        appCurrentChoiceIndex = Int.random(in: 0..<Choice.allCases.count)
         round = 0
     }
 }
